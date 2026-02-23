@@ -53,6 +53,24 @@ pip install -r requirements.txt
 streamlit run app_binary.py
 ```
 
+### 🐳 Docker 快速部署 (一鍵啟動)
+
+本專案支援容器化部署，確保在任何環境下皆可穩定執行：
+
+**1. 建置 Docker 映像檔 (Image)：**
+
+```bash
+docker build -t pneumonia-vit-app .
+```
+
+**2. 啟動容器 (Container)：**
+
+```bash
+docker run -p 8501:8501 pneumonia-vit-app
+```
+
+**3.** 打開瀏覽器並前往 `http://localhost:8501` 即可開始使用。
+
 ---
 
 ## 繁體中文
@@ -78,14 +96,3 @@ streamlit run app_binary.py
 | `train_binary.py` | ViT 模型二分類訓練與資料增強腳本 |
 | `saved_models/` | 存放訓練完成的 ViT 權重檔 (`.pth`) |
 | `requirements.txt` | 專案環境與雲端部署依賴套件清單 |
-
-### ⚖️ 醫療 AI 倫理聲明與限制 (Ethics & Limitations)
-* **資料偏差 (Data Bias)：** 本模型基於開源的 Kermany 胸部 X 光資料集訓練。該資料集可能存在特定年齡、性別或地域的人口統計學偏差，應用於其他族群時需進一步進行跨資料集驗證 (Cross-dataset validation)。
-* **非診斷用途 (Non-Diagnostic Use)：** 本系統定位為「輔助篩檢工具 (Screening Aid)」，不可取代專業放射科或胸腔科醫師的最終臨床診斷。任何醫療決策皆應遵循相關法規與臨床指南。
-* **隱私與合規 (Privacy & Compliance)：** 雲端展示平台不會保存或收集使用者上傳之 X 光片影像，確保符合病患隱私規範（如 HIPAA 精神）。
-
-### 🗺️ 未來展望 (Future Work)
-- [ ] **跨資料集驗證**：整合 CheXpert 或 RSNA Pneumonia 等外部資料集進行泛化能力測試。
-- [ ] **多模態整合 (Multimodal Integration)**：未來計劃引入病患的臨床數據（如白血球指數、年齡、發燒天數）與影像進行聯合預測。
-- [ ] **API 封裝**：使用 FastAPI 開發後端 API，以便與現有的 HIS (醫院資訊系統) 無縫整合。
-- [ ] **容器化部署**：建立 Dockerfile 與 docker-compose 設定檔，實現一鍵本地端部署。
