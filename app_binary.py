@@ -34,6 +34,20 @@ def load_vit_model(path):
 
 st.title("🏥 智慧醫療 AI 肺炎篩檢系統")
 
+# 🌟 新增：將靜態的專業評估圖表放入 UI 中展示，提升專業度
+with st.expander("📊 查看模型臨床效能與評估報告 (Model Evaluation)", expanded=False):
+    st.markdown("""
+    本系統經過嚴格的 MLOps 醫療指標測試，具備高敏感度 (低漏診率) 與像素級的可解釋性 (SHAP)。
+    以下為本機端測試集之驗證結果：
+    """)
+    col1, col2 = st.columns(2)
+    with col1:
+        if os.path.exists("clinical_evaluation_plots.png"):
+            st.image("clinical_evaluation_plots.png", caption="混淆矩陣與校準曲線 (高敏感度證明)")
+    with col2:
+        if os.path.exists("shap_explanation.png"):
+            st.image("shap_explanation.png", caption="SHAP 像素級特徵歸因分析")
+
 # 🌟 新增：醫療隱私與合規警語 (符合 HIPAA 精神)
 st.warning("🔒 **隱私與安全提示**：本系統僅供學術測試與輔助篩檢。請確保上傳之影像已去除個人識別資訊 (De-identified) 以符合相關醫療隱私法規。系統不會在伺服器端永久儲存您的影像。")
 

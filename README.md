@@ -4,7 +4,6 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI/CD Pipeline](https://github.com/Lin060105/Pneumonia-ViT-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/Lin060105/Pneumonia-ViT-Project/actions/workflows/ci.yml)
 
 ![App Demo](demo.png)
 
@@ -94,6 +93,22 @@ docker run -p 8501:8501 pneumonia-vit-app
 - **批次檢測與 Excel 報表匯出：** 專為真實醫院工作流設計，支援一次框選上傳大量 X 光片進行極速運算，並可一鍵下載包含 AI 診斷結果與信心度的 Excel (CSV) 總表。
 - **可解釋性 AI (XAI)：** 透過熱力圖疊加技術，輔助醫師快速定位肺部異常浸潤或發炎區域。
 - **雙模式互動介面：** 使用 Streamlit 打造，提供「詳細報告模式」與「快速批次模式」，並支援自訂 AI 信心度門檻。
+
+### 📊 臨床效能與可解釋性 (Clinical Performance & XAI)
+
+本專案不僅追求高準確率，更導入了業界標準的 MLOps 與醫療 AI 評估指標，確保模型具備高度的臨床可靠性與可解釋性。
+
+**1. 醫療核心指標與校準 (Clinical Metrics & Calibration)**
+
+左圖為混淆矩陣，展現極低的漏診率 (False Negative)；右圖為校準曲線 (Calibration Curve)，證明 AI 輸出的機率值具備高度可信度。
+
+![Clinical Evaluation](clinical_evaluation_plots.png)
+
+**2. SHAP 進階特徵歸因 (SHAP Explainability)**
+
+除了常規的 Grad-CAM，本專案額外導入 SHAP (SHapley Additive exPlanations)，精細解析像素級別的特徵貢獻，徹底打破 AI 黑盒子。
+
+![SHAP Explanation](shap_explanation.png)
 
 ### 📁 專案架構 (Project Structure)
 
