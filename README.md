@@ -4,6 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI/CD Pipeline](https://github.com/Lin060105/Pneumonia-ViT-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/Lin060105/Pneumonia-ViT-Project/actions/workflows/ci.yml)
 
 ![App Demo](demo.png)
 
