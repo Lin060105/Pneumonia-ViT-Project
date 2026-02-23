@@ -7,3 +7,14 @@ numpy
 Pillow
 grad-cam
 opencv-python-headless
+
+# 📊 臨床級評估與數據處理
+pandas
+scikit-learn
+matplotlib
+seaborn
+
+# ⚖️ 偏差分析、進階解釋與跨院驗證 (Advanced MLOps)
+fairlearn
+shap
+pydicom
