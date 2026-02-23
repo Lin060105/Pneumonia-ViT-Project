@@ -47,7 +47,13 @@ git lfs pull
 pip install -r requirements.txt
 ```
 
-**4. Run the application:**
+**4. Auto-download & setup the dataset:**
+
+```bash
+python setup_dataset.py
+```
+
+**5. Run the application:**
 
 ```bash
 streamlit run app_binary.py
