@@ -106,7 +106,7 @@ docker run -p 8501:8501 pneumonia-vit-app
 
 **2. SHAP 進階特徵歸因 (SHAP Explainability)**
 
-除了常規的 Grad-CAM，本專案額外導入 SHAP (SHapley Additive exPlanations)，精細解析像素級別的特徵貢獻，徹底打破 AI 黑盒子。
+除了常規的 Grad-CAM，本專案額外導入 SHAP (SHapley Additive exPlanations) 黑盒遮罩法，精細解析像素級別的特徵貢獻，徹底打破 AI 黑盒子。
 
 ![SHAP Explanation](shap_explanation.png)
 
