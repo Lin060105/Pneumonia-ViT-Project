@@ -67,9 +67,16 @@ def main():
     logging.info("⏳ 正在計算像素貢獻度，這可能需要幾分鐘，請稍候...")
     shap_values = explainer(test_images_np, max_evals=500, outputs=shap.Explanation.argsort.flip[:1])
 
-    # 6. 繪製圖表並存檔
-    shap.image_plot(shap_values)
-    plt.savefig('shap_explanation.png', dpi=300, bbox_inches='tight')
+    # 6. 繪製圖表並存檔 (修正存白圖的問題)
+    # 加入 show=False，讓它在背景畫圖就好，不要彈出視窗清空畫布
+    shap.image_plot(shap_values, show=False)
+    
+    # 抓取目前的畫布並直接存檔
+    fig = plt.gcf()
+    fig.savefig('shap_explanation.png', dpi=300, bbox_inches='tight')
+    
+    # 存檔完成後，把畫布從記憶體中關閉
+    plt.close(fig)
     logging.info("✅ SHAP 解釋圖表已重新生成並儲存為 shap_explanation.png")
 
 if __name__ == '__main__':
