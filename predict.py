@@ -1,88 +1,55 @@
+"""Command-line prediction for a single chest X-ray image."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
 import torch
-import torch.nn as nn
-from torchvision import models, transforms
 from PIL import Image
-import sys
-import os
 
-# --- 1. 定義預測函數 ---
-def predict_image(image_path, model, class_names):
-    """
-    對單張圖片進行預測
-    """
-    # 檢查檔案是否存在
-    if not os.path.exists(image_path):
-        return "Error: Image path does not exist.", 0.0
+from model_utils import decide_screening_status, get_device, image_to_tensor, load_model_checkpoint, predict_probabilities
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.eval()  # 設置為評估模式
 
-    # 圖片預處理 (必須和訓練時的驗證/測試集轉換一致)
-    preprocess = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Predict pneumonia probability for one image")
+    parser.add_argument("image_path", help="Path to a JPG/PNG chest X-ray image")
+    parser.add_argument("--model-path", default="saved_models/pneumonia_binary_best.pth")
+    parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--uncertainty-margin", type=float, default=0.05)
+    return parser.parse_args()
 
-    # 載入圖片並處理
-    try:
-        image = Image.open(image_path).convert('RGB')
-        image_tensor = preprocess(image)
-        # PyTorch 模型需要一個 batch 維度，所以我們用 unsqueeze(0) 增加一個維度
-        # 變成 [1, 3, 224, 224]
-        image_tensor = image_tensor.unsqueeze(0).to(device)
-    except Exception as e:
-        return f"Error processing image: {e}", 0.0
+
+def main() -> None:
+    args = parse_args()
+    image_path = Path(args.image_path)
+    model_path = Path(args.model_path)
+
+    if not image_path.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model not found: {model_path}")
+
+    device = get_device()
+    model, metadata = load_model_checkpoint(model_path, device=device)
+    image = Image.open(image_path).convert("RGB")
+    image_tensor = image_to_tensor(image, device)
 
     with torch.no_grad():
-        outputs = model(image_tensor)
-        # 使用 softmax 獲取機率
-        probabilities = torch.nn.functional.softmax(outputs, dim=1)
-        # 獲取最大機率的索引和值
-        confidence, predicted_idx = torch.max(probabilities, 1)
-        predicted_class = class_names[predicted_idx.item()]
+        probabilities = predict_probabilities(model, image_tensor)
+    screening = decide_screening_status(
+        probabilities,
+        threshold=args.threshold,
+        uncertainty_margin=args.uncertainty_margin,
+    )
 
-    return predicted_class, confidence.item()
+    print(f"Model: {metadata.get('model_name', 'unknown')}")
+    print(f"Image: {image_path}")
+    print(f"Decision: {screening['decision']}")
+    print(f"P(Normal): {screening['normal_probability']:.4f}")
+    print(f"P(Pneumonia): {screening['pneumonia_probability']:.4f}")
+    print(f"Threshold: {screening['threshold']:.2f}")
 
-if __name__ == '__main__':
-    # --- 2. 建立模型並載入權重 (與 evaluate.py 相同) ---
-    model = models.resnet18(weights=None)
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 2)
-    
-    # 模型權重路徑 (回家跑完訓練才會出現這個檔案)
-    model_path = 'saved_models/pneumonia_resnet18_best.pth'
-    class_names = ['NORMAL', 'PNEUMONIA']
 
-    if os.path.exists(model_path):
-        # 載入訓練好的參數
-        model.load_state_dict(torch.load(model_path))
-        
-        # --- 3. 處理命令行輸入 ---
-        if len(sys.argv) != 2:
-            print("\n[使用方法]")
-            print(f"python {sys.argv[0]} <圖片路徑>\n")
-            print("[範例]")
-            # 提供一個存在的範例圖片路徑 (測試集中的第一張正常圖片)
-            sample_image = os.path.join('chest_xray', 'test', 'NORMAL', 'IM-0001-0001.jpeg')
-            if os.path.exists(sample_image):
-                print(f"python {sys.argv[0]} {sample_image}")
-            else:
-                print(f"python {sys.argv[0]} chest_xray/test/PNEUMONIA/person10_virus_35.jpeg")
-        else:
-            image_to_predict = sys.argv[1]
-            print(f"正在預測圖片: {image_to_predict} ...")
-            
-            predicted_class, confidence = predict_image(image_to_predict, model, class_names)
-
-            if "Error" in predicted_class:
-                print(predicted_class)
-            else:
-                print("-" * 30)
-                print(f"預測結果: {predicted_class}")
-                print(f"信心度:   {confidence:.4f} ({confidence*100:.2f}%)")
-                print("-" * 30)
-    else:
-        print(f"錯誤：找不到模型檔案 {model_path}")
-        print("請先執行 python train.py 完成訓練後再來執行此腳本。")
+if __name__ == "__main__":
+    main()

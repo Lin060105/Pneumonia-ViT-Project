@@ -2,3 +2,7 @@ chest_xray/
 __pycache__/ 
 .venv/ 
 .streamlit/ 
+data/
+chest_xray_dataset.zip
+chest_xray_extracted/
+*.log

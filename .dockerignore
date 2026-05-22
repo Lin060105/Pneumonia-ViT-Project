@@ -13,3 +13,8 @@ __pycache__/
 # 忽略本地端的虛擬環境 (如果您有的話)
 venv/
 env/
+.venv/
+data/
+chest_xray_dataset.zip
+chest_xray_extracted/
+tests/

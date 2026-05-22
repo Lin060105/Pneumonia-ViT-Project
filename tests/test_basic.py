@@ -1,28 +1,48 @@
-"""
-Pneumonia ViT Model - Unit Tests
-用於自動化測試模型架構與資料流是否正常。
-"""
 import torch
-import torch.nn as nn
-import timm
+
+from model_utils import (
+    CLASS_NAMES,
+    create_model,
+    decide_screening_status,
+    load_model_checkpoint,
+    save_model_checkpoint,
+)
+
 
 def test_model_architecture_and_forward_pass():
-    """
-    測試 1: 模型是否能成功建立，且輸出層是否正確改為 2 分類。
-    測試 2: 輸入一張假的 X 光片，模型是否能成功計算並給出 2 個機率值。
-    """
-    # 1. 建立模型
-    model = timm.create_model('vit_base_patch16_224', pretrained=False)
-    model.head = nn.Linear(model.head.in_features, 2)
-    model.eval() # 設定為評估模式
-    
-    # 2. 模擬一張 X 光片 Tensor (Batch_size=1, Channel=3, Height=224, Width=224)
+    model = create_model(pretrained=False)
+    model.eval()
+
     dummy_input = torch.randn(1, 3, 224, 224)
-    
-    # 3. 讓假圖片通過模型
     with torch.no_grad():
         output = model(dummy_input)
-    
-    # 4. 斷言 (Assert)：如果輸出不是 1 筆資料且 2 個類別，程式就會報錯攔截！
-    assert output.shape == (1, 2), f"模型輸出維度錯誤！預期 (1, 2)，卻得到 {output.shape}"
-    print("✅ 模型架構與前向傳播 (Forward pass) 測試通過！")
+
+    assert output.shape == (1, 2)
+
+
+def test_threshold_decision_uses_pneumonia_probability():
+    pneumonia = decide_screening_status([0.2, 0.8], threshold=0.5, uncertainty_margin=0.0)
+    normal = decide_screening_status([0.7, 0.3], threshold=0.5, uncertainty_margin=0.0)
+    review = decide_screening_status([0.51, 0.49], threshold=0.5, uncertainty_margin=0.02)
+
+    assert pneumonia["decision"] == "PNEUMONIA"
+    assert normal["decision"] == "NORMAL"
+    assert review["decision"] == "REVIEW"
+
+
+def test_checkpoint_roundtrip_with_metadata(tmp_path):
+    model = create_model(pretrained=False)
+    checkpoint_path = tmp_path / "model.pth"
+    metadata = {
+        "model_name": "vit_base_patch16_224",
+        "class_names": list(CLASS_NAMES),
+        "threshold": 0.5,
+    }
+
+    save_model_checkpoint(checkpoint_path, model, metadata)
+    loaded_model, loaded_metadata = load_model_checkpoint(checkpoint_path, device="cpu")
+
+    assert tuple(loaded_metadata["class_names"]) == CLASS_NAMES
+    assert loaded_metadata["threshold"] == 0.5
+    with torch.no_grad():
+        assert loaded_model(torch.randn(1, 3, 224, 224)).shape == (1, 2)

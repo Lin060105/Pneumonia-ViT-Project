@@ -1,57 +1,59 @@
-import os
+"""Legacy utility for splitting PNEUMONIA into BACTERIA and VIRUS folders.
+
+The main project is binary (NORMAL vs PNEUMONIA). This script is kept only for
+experiments that intentionally need the older three-class dataset layout. It is
+dry-run by default because it moves files.
+"""
+
+from __future__ import annotations
+
+import argparse
 import shutil
-from glob import glob
+from pathlib import Path
 
-def restructure_dataset(base_dir):
-    """
-    將 chest_xray 資料夾中的 PNEUMONIA 子資料夾根據檔名
-    自動劃分為 BACTERIA 和 VIRUS 兩個新的子資料夾。
-    """
-    print("開始重組資料集...")
-    
-    # 遍歷 train, test, val 三個資料集
-    for split in ['train', 'test', 'val']:
-        pneumonia_path = os.path.join(base_dir, split, 'PNEUMONIA')
-        
-        if not os.path.exists(pneumonia_path):
-            print(f"警告: 找不到路徑 {pneumonia_path}，跳過。")
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Split PNEUMONIA images into BACTERIA/VIRUS folders")
+    parser.add_argument("--base-dir", default="chest_xray")
+    parser.add_argument("--apply", action="store_true", help="Actually move files. Without this, only report counts.")
+    return parser.parse_args()
+
+
+def restructure_dataset(base_dir: str, apply_changes: bool = False) -> None:
+    base = Path(base_dir)
+    for split in ["train", "test", "val"]:
+        pneumonia_path = base / split / "PNEUMONIA"
+        if not pneumonia_path.exists():
+            print(f"{split}: no PNEUMONIA folder found")
             continue
-            
-        # 建立新的 BACTERIA 和 VIRUS 資料夾
-        bacteria_path = os.path.join(base_dir, split, 'BACTERIA')
-        virus_path = os.path.join(base_dir, split, 'VIRUS')
-        os.makedirs(bacteria_path, exist_ok=True)
-        os.makedirs(virus_path, exist_ok=True)
-        
-        # 獲取所有 PNEUMONIA 圖片
-        image_files = glob(os.path.join(pneumonia_path, '*.jpeg'))
-        moved_bacteria = 0
-        moved_virus = 0
-        
-        for img_file in image_files:
-            filename = os.path.basename(img_file)
-            if 'bacteria' in filename:
-                shutil.move(img_file, os.path.join(bacteria_path, filename))
-                moved_bacteria += 1
-            elif 'virus' in filename:
-                shutil.move(img_file, os.path.join(virus_path, filename))
-                moved_virus += 1
-                
-        print(f"在 {split} 資料集中:")
-        print(f"  - 移動了 {moved_bacteria} 張細菌性肺炎圖片至 BACTERIA 資料夾。")
-        print(f"  - 移動了 {moved_virus} 張病毒性肺炎圖片至 VIRUS 資料夾。")
-        
-        # 移除空的 PNEUMONIA 資料夾
-        try:
-            if not os.listdir(pneumonia_path):
-                os.rmdir(pneumonia_path)
-                print(f"  - 已移除空的 PNEUMONIA 資料夾。")
-        except OSError as e:
-            print(f"移除 {pneumonia_path} 時出錯: {e}")
-            
-    print("\n資料集重組完成！")
 
-if __name__ == '__main__':
-    # 專案根目錄下的 chest_xray 資料夾
-    data_directory = 'chest_xray'
-    restructure_dataset(data_directory)
+        bacteria_files = []
+        virus_files = []
+        for image_path in pneumonia_path.glob("*.jpeg"):
+            name = image_path.name.lower()
+            if "bacteria" in name:
+                bacteria_files.append(image_path)
+            elif "virus" in name:
+                virus_files.append(image_path)
+
+        print(f"{split}: bacteria={len(bacteria_files)} virus={len(virus_files)}")
+        if not apply_changes:
+            continue
+
+        bacteria_path = base / split / "BACTERIA"
+        virus_path = base / split / "VIRUS"
+        bacteria_path.mkdir(parents=True, exist_ok=True)
+        virus_path.mkdir(parents=True, exist_ok=True)
+
+        for image_path in bacteria_files:
+            shutil.move(str(image_path), bacteria_path / image_path.name)
+        for image_path in virus_files:
+            shutil.move(str(image_path), virus_path / image_path.name)
+
+        if not any(pneumonia_path.iterdir()):
+            pneumonia_path.rmdir()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    restructure_dataset(args.base_dir, apply_changes=args.apply)
