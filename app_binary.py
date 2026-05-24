@@ -50,9 +50,9 @@ def decision_label(decision):
 
 def decision_badge(decision):
     badges = {
-        "NORMAL": "🟢 Normal",
-        "PNEUMONIA": "🔴 Pneumonia alert",
-        "REVIEW": "🟡 Needs manual review",
+        "NORMAL": "Normal",
+        "PNEUMONIA": "Pneumonia alert",
+        "REVIEW": "Needs manual review",
     }
     return badges[decision]
 

@@ -1,4 +1,23 @@
-# 胸腔 X 光肺炎分類研究原型操作手冊
+"""Repair local encoding issues and set conservative runtime defaults.
+
+This script is intentionally small and repeatable. It rewrites the Traditional
+Chinese project manual as UTF-8 and normalizes the Streamlit decision badge text
+if mojibake or unsupported glyphs appear again.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+MANUAL_PATH = ROOT / "docs" / "PROJECT_MANUAL.zh-TW.md"
+APP_PATH = ROOT / "app_binary.py"
+
+
+PROJECT_MANUAL_CONTENT = r"""# 胸腔 X 光肺炎分類研究原型操作手冊
 
 本專案是以胸腔 X 光影像進行 `NORMAL` 與 `PNEUMONIA` 二分類的研究與作品集原型。模型輸出應被解讀為肺炎篩檢風險分數，不是臨床診斷結論。
 
@@ -124,3 +143,65 @@ python bias_analysis.py `
 - 醫療 AI 相關描述應保持保守，不暗示可直接診斷。
 - 新增依賴時同步更新 `requirements.txt` 或 `requirements-dev.txt`。
 - 大型資料與模型權重不要納入一般 Git diff；資料留在本機，模型權重走 Git LFS。
+"""
+
+
+BADGE_FUNCTION = '''def decision_badge(decision):
+    badges = {
+        "NORMAL": "Normal",
+        "PNEUMONIA": "Pneumonia alert",
+        "REVIEW": "Needs manual review",
+    }
+    return badges[decision]
+'''
+
+
+def configure_openmp_environment() -> None:
+    """Set runtime defaults that make local Windows testing less fragile."""
+    os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("MKL_NUM_THREADS", "1")
+    os.environ.setdefault("PYTHONUTF8", "1")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
+
+def rewrite_project_manual() -> bool:
+    MANUAL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    old_text = MANUAL_PATH.read_text(encoding="utf-8", errors="replace") if MANUAL_PATH.exists() else ""
+    if old_text == PROJECT_MANUAL_CONTENT:
+        return False
+    MANUAL_PATH.write_text(PROJECT_MANUAL_CONTENT, encoding="utf-8", newline="\n")
+    return True
+
+
+def fix_app_badges() -> bool:
+    text = APP_PATH.read_text(encoding="utf-8", errors="replace")
+    pattern = re.compile(
+        r"def decision_badge\(decision\):\n"
+        r"    badges = \{\n"
+        r".*?"
+        r"    \}\n"
+        r"    return badges\[decision\]\n",
+        flags=re.DOTALL,
+    )
+    if not pattern.search(text):
+        raise RuntimeError("Could not locate decision_badge() in app_binary.py")
+
+    updated = pattern.sub(BADGE_FUNCTION, text, count=1)
+    if updated == text:
+        return False
+    APP_PATH.write_text(updated, encoding="utf-8", newline="\n")
+    return True
+
+
+def main() -> None:
+    configure_openmp_environment()
+    manual_changed = rewrite_project_manual()
+    app_changed = fix_app_badges()
+    print(f"Manual rewritten: {manual_changed}")
+    print(f"App badges fixed: {app_changed}")
+    print("OpenMP test environment defaults configured for this process.")
+
+
+if __name__ == "__main__":
+    main()
