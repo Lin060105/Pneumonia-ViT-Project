@@ -1,0 +1,4 @@
+﻿split,NORMAL,PNEUMONIA,total,pneumonia_fraction,pneumonia_to_normal_ratio
+train,1341,3875,5216,0.7429064417177914,2.889634601043997
+val,8,8,16,0.5,1.0
+test,234,390,624,0.625,1.6666666666666667

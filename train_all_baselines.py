@@ -14,9 +14,12 @@ normalization, optimizer, scheduler, class order, and validation strategy.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from pathlib import Path
 from types import SimpleNamespace
+
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import numpy as np
 import pandas as pd
@@ -68,6 +71,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--output-dir", default="results")
     parser.add_argument("--checkpoint-dir", default="saved_models/baselines")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip model/seed runs already present in baseline_summary.csv with an existing checkpoint",
+    )
     return parser.parse_args()
 
 
@@ -280,19 +288,37 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     device = get_device()
 
-    all_history: list[dict[str, object]] = []
-    summaries: list[dict[str, object]] = []
+    history_path = output_dir / "baseline_training_history.csv"
+    summary_path = output_dir / "baseline_summary.csv"
+    if args.resume and history_path.exists():
+        all_history = pd.read_csv(history_path).to_dict("records")
+    else:
+        all_history: list[dict[str, object]] = []
+
+    if args.resume and summary_path.exists():
+        summaries = pd.read_csv(summary_path).to_dict("records")
+    else:
+        summaries: list[dict[str, object]] = []
+
+    completed_runs: set[tuple[str, int]] = set()
+    for row in summaries:
+        checkpoint = Path(str(row.get("best_checkpoint", "")))
+        if checkpoint.exists():
+            completed_runs.add((str(row.get("model")), int(row.get("seed"))))
 
     for model_key in args.models:
         for seed in args.seeds:
+            display_name, _timm_model_name = MODEL_REGISTRY[model_key]
+            if args.resume and (display_name, seed) in completed_runs:
+                print(f"Skipping completed run: {display_name} seed={seed}")
+                continue
+
             history, summary = train_one_run(args, model_key, seed, device)
             all_history.extend(history)
             summaries.append(summary)
-            pd.DataFrame(all_history).to_csv(output_dir / "baseline_training_history.csv", index=False)
-            pd.DataFrame(summaries).to_csv(output_dir / "baseline_summary.csv", index=False)
+            pd.DataFrame(all_history).to_csv(history_path, index=False)
+            pd.DataFrame(summaries).to_csv(summary_path, index=False)
 
-    history_path = output_dir / "baseline_training_history.csv"
-    summary_path = output_dir / "baseline_summary.csv"
     print(f"\nSaved epoch-level history to {history_path}")
     print(f"Saved baseline summary to {summary_path}")
 

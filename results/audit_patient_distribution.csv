@@ -1,0 +1,7 @@
+﻿split,class_name,unique_patients,images,images_per_patient_mean,images_per_patient_median,images_per_patient_min,images_per_patient_max
+train,NORMAL,1211,1341,1.1073492981007431,1.0,1,4
+train,PNEUMONIA,1635,3875,2.3700305810397553,2.0,1,30
+val,NORMAL,8,8,1.0,1.0,1,1
+val,PNEUMONIA,7,8,1.1428571428571428,1.0,1,2
+test,NORMAL,225,234,1.04,1.0,1,3
+test,PNEUMONIA,202,390,1.9306930693069306,1.0,1,9

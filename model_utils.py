@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import os
+import pickle
 from pathlib import Path
 from typing import Any, Dict, Mapping, Sequence, Tuple
+
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import numpy as np
 import timm
@@ -64,6 +68,11 @@ def get_train_transform() -> transforms.Compose:
 def _torch_load(path: str | Path, map_location: torch.device | str) -> Any:
     try:
         return torch.load(path, map_location=map_location, weights_only=True)
+    except pickle.UnpicklingError:
+        # Local project checkpoints may contain legacy numpy scalar metadata
+        # that PyTorch's safe weights-only loader rejects. Fall back only after
+        # the safe path fails so ordinary state_dict loading remains preferred.
+        return torch.load(path, map_location=map_location, weights_only=False)
     except TypeError:
         return torch.load(path, map_location=map_location)
 
@@ -117,11 +126,24 @@ def save_model_checkpoint(
     model: nn.Module,
     metadata: Mapping[str, Any],
 ) -> None:
+    def to_builtin(value: Any) -> Any:
+        if isinstance(value, np.generic):
+            return value.item()
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+        if isinstance(value, Mapping):
+            return {str(key): to_builtin(item) for key, item in value.items()}
+        if isinstance(value, tuple):
+            return [to_builtin(item) for item in value]
+        if isinstance(value, list):
+            return [to_builtin(item) for item in value]
+        return value
+
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     torch.save(
         {
             "model_state_dict": model.state_dict(),
-            "metadata": dict(metadata),
+            "metadata": to_builtin(dict(metadata)),
         },
         path,
     )

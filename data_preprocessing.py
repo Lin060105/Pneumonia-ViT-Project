@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 from torch.utils.data import DataLoader
 from torchvision import datasets

@@ -1,0 +1,6 @@
+model,model_path,auc_roc,auc_difference_vs_reference,difference_95_ci_lower,difference_95_ci_upper,paired_bootstrap_p_value,reference_model
+ViT-B/16,saved_models\baselines_full\vit-b_16_seed42_best.pth,0.979552925706772,0.0,0.0,0.0,,True
+ResNet18,saved_models\baselines_full\resnet18_seed2025_best.pth,0.9708525093140479,-0.00870041639272412,-0.02046200648667377,-0.0002730077845158855,0.03,False
+ResNet50,saved_models\baselines_full\resnet50_seed2025_best.pth,0.970195047118124,-0.009357878588648005,-0.018755618062329872,-0.0007151779507697858,0.04,False
+DenseNet121,saved_models\baselines_full\densenet121_seed42_best.pth,0.9680528161297391,-0.011500109577032847,-0.021918468725340864,-0.002277492888535301,0.02,False
+EfficientNet-B0,saved_models\baselines_full\efficientnet-b0_seed1337_best.pth,0.9788516326977865,-0.0007012930089854708,-0.009356040346009547,0.005767282876037964,0.86,False

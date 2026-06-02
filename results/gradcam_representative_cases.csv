@@ -1,0 +1,5 @@
+path,true_binary,true_label,p_pneumonia,predicted_binary,predicted_label,case_type
+chest_xray/test\PNEUMONIA\person141_bacteria_678.jpeg,1,PNEUMONIA,0.9996556043624878,1,PNEUMONIA,TP
+chest_xray/test\NORMAL\NORMAL2-IM-0033-0001.jpeg,0,NORMAL,0.00022477484890259802,0,NORMAL,TN
+chest_xray/test\NORMAL\NORMAL2-IM-0256-0001.jpeg,0,NORMAL,0.9992820620536804,1,PNEUMONIA,FP
+chest_xray/test\PNEUMONIA\person154_bacteria_728.jpeg,1,PNEUMONIA,0.003213777905330062,0,NORMAL,FN

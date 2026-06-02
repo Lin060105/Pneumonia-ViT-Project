@@ -12,9 +12,13 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
+import pickle
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Sequence
+
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -150,6 +154,8 @@ def parse_args() -> argparse.Namespace:
 def torch_load_checkpoint(path: str | Path, map_location: torch.device | str):
     try:
         return torch.load(path, map_location=map_location, weights_only=True)
+    except pickle.UnpicklingError:
+        return torch.load(path, map_location=map_location, weights_only=False)
     except TypeError:
         return torch.load(path, map_location=map_location)
 

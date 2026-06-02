@@ -1,6 +1,8 @@
 import logging
 import os
 
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import numpy as np
 import pandas as pd
 import streamlit as st

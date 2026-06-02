@@ -14,6 +14,8 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import numpy as np
 import torch
 import torch.nn as nn

@@ -10,7 +10,10 @@ from __future__ import annotations
 import argparse
 import logging
 import math
+import os
 from pathlib import Path
+
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import numpy as np
 import pandas as pd
